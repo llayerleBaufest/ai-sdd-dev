@@ -1,0 +1,138 @@
+openapi: 3.0.3
+info:
+  title: SupplierOnboarding API - Registrar Proveedor
+  description: >
+    Contrato HTTP para la funcionalidad "Registrar proveedor". Expone únicamente el
+    comportamiento exigido por spec.md: registrar un proveedor (FR-001 a FR-020). La propia
+    respuesta del registro devuelve la identidad, el estado y la auditoría del proveedor
+    (FR-014, FR-015), por lo que no se agrega un endpoint de consulta posterior sin un
+    requisito explícito que lo justifique. No se agregan operaciones fuera de este alcance
+    (sin listado, sin consulta individual, sin actualización, sin cambio de estado).
+  version: "1.0.0"
+
+paths:
+  /api/proveedores:
+    post:
+      summary: Registrar un nuevo proveedor
+      operationId: registrarProveedor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrarProveedorSolicitud'
+      responses:
+        '201':
+          description: >
+            Proveedor registrado exitosamente (FR-016). El proveedor queda en estado
+            "Pendiente" (FR-012) con identidad propia asignada (FR-014). El cuerpo de la
+            respuesta incluye identidad, estado y auditoría (FR-014, FR-015) sin requerir una
+            consulta posterior.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProveedorRespuesta'
+        '400':
+          description: >
+            Rechazado por datos obligatorios inválidos (FR-002 a FR-006, FR-017). El cuerpo
+            incluye todos los campos inválidos detectados, no solo el primero (Caso Límite de
+            spec.md).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroresValidacion'
+        '409':
+          description: >
+            Rechazado por proveedor duplicado (FR-008, FR-009, FR-018). El cuerpo no expone la
+            identidad interna, la razón social ni el estado del proveedor existente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDuplicado'
+
+components:
+  schemas:
+    RegistrarProveedorSolicitud:
+      type: object
+      description: Datos mínimos obligatorios exigidos por FR-001.
+      required:
+        - razonSocial
+        - pais
+        - identificadorFiscal
+        - nombreContacto
+        - correoContacto
+      properties:
+        razonSocial:
+          type: string
+          description: FR-002 rechaza vacío o solo espacios.
+        pais:
+          type: string
+          description: Código ISO 3166-1 del país (FR-003).
+          example: "AR"
+        identificadorFiscal:
+          type: string
+          description: Valor original ingresado por el usuario (FR-004, FR-010).
+        nombreContacto:
+          type: string
+          description: FR-005 rechaza vacío.
+        correoContacto:
+          type: string
+          format: email
+          description: FR-006 exige formato de correo válido.
+
+    ProveedorRespuesta:
+      type: object
+      description: >
+        Proyección mínima de Proveedor necesaria para confirmar el registro (FR-016) y para
+        consultar identidad/estado/auditoría (FR-014, FR-015).
+      properties:
+        id:
+          type: string
+          format: uuid
+        razonSocial:
+          type: string
+        pais:
+          type: string
+        identificadorFiscal:
+          type: string
+          description: Valor original tal como fue ingresado (no el valor normalizado).
+        nombreContacto:
+          type: string
+        correoContacto:
+          type: string
+        estado:
+          type: string
+          enum: [Pendiente]
+        registradoPor:
+          type: string
+        registradoEn:
+          type: string
+          format: date-time
+
+    ErroresValidacion:
+      type: object
+      description: FR-017: información suficiente para corregir todos los datos inválidos.
+      properties:
+        errores:
+          type: array
+          items:
+            type: object
+            properties:
+              campo:
+                type: string
+                example: "correoContacto"
+              mensaje:
+                type: string
+                example: "El correo electrónico de contacto no tiene un formato válido."
+
+    ErrorDuplicado:
+      type: object
+      description: >
+        FR-018: solo informa la existencia previa de la combinación país + identificador
+        fiscal, sin exponer identidad interna, razón social ni estado del proveedor existente.
+      properties:
+        mensaje:
+          type: string
+          example: >
+            Ya existe un proveedor registrado con esa combinación de país e identificador
+            fiscal.
