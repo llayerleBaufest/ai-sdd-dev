@@ -3,7 +3,7 @@ info:
   title: SupplierOnboarding API - Registrar Proveedor
   description: >
     Contrato HTTP para la funcionalidad "Registrar proveedor". Expone únicamente el
-    comportamiento exigido por spec.md: registrar un proveedor (FR-001 a FR-020). La propia
+    comportamiento exigido por spec.md: registrar un proveedor (FR-001 a FR-021). La propia
     respuesta del registro devuelve la identidad, el estado y la auditoría del proveedor
     (FR-014, FR-015), por lo que no se agrega un endpoint de consulta posterior sin un
     requisito explícito que lo justifique. No se agregan operaciones fuera de este alcance
@@ -49,6 +49,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDuplicado'
+        '5XX':
+          description: >
+            Falla técnica que impide completar el registro (FR-021). El proveedor NO debe
+            considerarse registrado, ni parcial ni exitosamente. El cuerpo únicamente comunica
+            que la operación no pudo completarse, sin exponer excepciones, stack traces, ni
+            detalles internos de persistencia o infraestructura (por ejemplo, EF Core o SQL
+            Server); esta especificación no define aquí códigos de protocolo, mecanismos de
+            transacción ni reintentos concretos (ver spec.md, FR-021).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorTecnico'
 
 components:
   schemas:
@@ -136,3 +148,13 @@ components:
           example: >
             Ya existe un proveedor registrado con esa combinación de país e identificador
             fiscal.
+
+    ErrorTecnico:
+      type: object
+      description: >
+        FR-021: la operación no pudo completarse por una falla técnica. No expone excepciones,
+        stack traces ni detalles internos de persistencia o infraestructura.
+      properties:
+        mensaje:
+          type: string
+          example: "No fue posible completar el registro. Intente nuevamente más tarde."

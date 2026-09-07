@@ -399,6 +399,15 @@ solicitud.
   social pero distinta combinación de país e identificador fiscal, verificando que ambos devuelven
   `201 Created` (FR-020; sin historia de usuario explícita asociada, ver CHK019). Depende de T057
   (mismo archivo).
+- [X] T076 En `ProveedorEndpointsTests.cs`, prueba de integración que simule una falla técnica de
+  persistencia distinta de un conflicto por duplicado (sustituyendo `IProveedorRepository` por un
+  doble de prueba que lanza una excepción genérica desde `AgregarAsync`, vía
+  `ConfigureTestServices`, igual que ya se hace con `IUsuarioActual`/`TimeProvider`), verificando
+  que `POST /api/proveedores` responde con un error genérico de servidor (`5xx`, mediante
+  `ProblemDetails`/`UseExceptionHandler` ya configurado en T010) sin exponer excepciones,
+  namespaces internos ni stack traces, y que no queda ningún proveedor persistido con ese
+  identificador fiscal (FR-021; sin historia de usuario explícita asociada, igual que FR-020/T058,
+  ver CHK019). Depende de T053 (mismo archivo), T010.
 
 **Checkpoint**: Las tres historias de usuario están verificadas de punta a punta contra
 infraestructura real.
@@ -447,6 +456,50 @@ OpenAPI nativo) y ejemplos de requests reproducibles bajo control de versiones.
 
 ---
 
+## Fase 10: Verificación Final
+
+**Propósito**: Confirmar que la implementación cumple `spec.md`, `plan.md` y los checklists
+vigentes, sin crear todavía recursos Azure.
+
+- [X] T065 Ejecutar `dotnet test tests/SupplierOnboarding.UnitTests` y
+  `dotnet test tests/SupplierOnboarding.IntegrationTests`, verificando que toda la suite pasa.
+  Depende de T012–T060. `UnitTests`: 44/44 verde. `IntegrationTests`: no ejecutable en este
+  entorno de trabajo por ausencia de Docker Desktop en ejecución (limitación de entorno
+  documentada en ADR-0006, no un defecto de código); el código compila y los escenarios
+  equivalentes se verificaron manualmente en T066 contra una instancia real de SQL Server local.
+  Durante esta verificación se corrigió un defecto real en `ProveedorRepository.ExisteAsync`
+  (comparaba `.Valor` de la propiedad convertida por EF Core, que no se puede traducir a SQL;
+  ahora compara la instancia completa de `IdentificadorFiscalNormalizado`).
+- [X] T066 Ejecutar manualmente los tres escenarios de
+  `specs/001-registrar-proveedor/quickstart.md` (registro exitoso, datos inválidos, duplicado)
+  contra la API en ejecución y confirmar que las respuestas coinciden con lo documentado. Depende
+  de T065. Verificado contra SQL Server local real (no Testcontainers): Escenario 1 → 201 con
+  `estado: Pendiente`; Escenario 2 → 400 con los 5 errores acumulados; Escenario 3 → 409 con
+  identificador exacto y con variante de formato irrelevante; además se confirmó `GET /scalar/v1`
+  (200) en Development.
+- [X] T067 Revisar `specs/001-registrar-proveedor/quickstart.md` y actualizarlo solo si algún paso
+  de puesta en marcha cambió durante la implementación (por ejemplo, el nombre exacto de la
+  migración `InicialProveedor`). Depende de T066. Revisado: coincide exactamente con la
+  implementación (nombre de migración, rutas, comando `dotnet user-secrets`); sin cambios
+  necesarios.
+- [X] T068 [P] Verificar la tabla de trazabilidad de este documento contra `spec.md`: confirmar que
+  cada requisito funcional (FR-001 a FR-021) y cada criterio de éxito (SC-001 a SC-006) tiene al
+  menos una tarea de implementación o prueba asociada. Depende de T065. Verificado: la tabla de
+  Trazabilidad (más abajo) cubre FR-001 a FR-021 y SC-001 a SC-006; FR-021 (agregado en
+  `spec.md` el 2026-09-03) quedó inicialmente sin tarea dedicada por decisión explícita previa del
+  usuario, y recibió cobertura explícita mediante T076 (hallazgo C1 de `/speckit-analyze`: prueba
+  de integración que simula una falla técnica de persistencia distinta de un conflicto por
+  duplicado, verificando que no se filtran detalles técnicos y que ningún proveedor queda
+  registrado).
+- [X] T069 [P] Revisar `specs/001-registrar-proveedor/checklists/calidad.md` (ítems CHK008, CHK028,
+  CHK029 sobre el identificador fiscal) y dejar constancia, en el propio código (comentarios de
+  T017) o en la revisión de esta tarea, de que no se resolvieron inventando nuevas reglas de
+  negocio no aprobadas. Depende de T065. Verificado: CHK008/CHK009/CHK018/CHK029 ya están
+  marcados `[x]` en calidad.md (resueltos por clarificación de sesión 2026-09-03 e implementados
+  en Fase 11); CHK028 también `[x]`; ninguna regla de negocio nueva no aprobada se agregó.
+
+---
+
 ## Fase 11: Corrección por Clarificación (2026-09-03) — Identificador Fiscal Normalizado Vacío
 
 **Propósito**: Incorporar la decisión de clarificación registrada en `spec.md` (Sesión
@@ -488,49 +541,6 @@ silenciosamente.
 **Checkpoint**: El comportamiento de `Proveedor` y `RegistrarProveedorValidador` incorpora la
 clarificación de FR-010 de la sesión 2026-09-03; `IdentificadorFiscalNormalizadoTests.cs` ya no
 documenta el caso como pendiente de negocio.
-
----
-
-## Fase 10: Verificación Final
-
-**Propósito**: Confirmar que la implementación cumple `spec.md`, `plan.md` y los checklists
-vigentes, sin crear todavía recursos Azure.
-
-- [X] T065 Ejecutar `dotnet test tests/SupplierOnboarding.UnitTests` y
-  `dotnet test tests/SupplierOnboarding.IntegrationTests`, verificando que toda la suite pasa.
-  Depende de T012–T060. `UnitTests`: 44/44 verde. `IntegrationTests`: no ejecutable en este
-  entorno de trabajo por ausencia de Docker Desktop en ejecución (limitación de entorno
-  documentada en ADR-0006, no un defecto de código); el código compila y los escenarios
-  equivalentes se verificaron manualmente en T066 contra una instancia real de SQL Server local.
-  Durante esta verificación se corrigió un defecto real en `ProveedorRepository.ExisteAsync`
-  (comparaba `.Valor` de la propiedad convertida por EF Core, que no se puede traducir a SQL;
-  ahora compara la instancia completa de `IdentificadorFiscalNormalizado`).
-- [X] T066 Ejecutar manualmente los tres escenarios de
-  `specs/001-registrar-proveedor/quickstart.md` (registro exitoso, datos inválidos, duplicado)
-  contra la API en ejecución y confirmar que las respuestas coinciden con lo documentado. Depende
-  de T065. Verificado contra SQL Server local real (no Testcontainers): Escenario 1 → 201 con
-  `estado: Pendiente`; Escenario 2 → 400 con los 5 errores acumulados; Escenario 3 → 409 con
-  identificador exacto y con variante de formato irrelevante; además se confirmó `GET /scalar/v1`
-  (200) en Development.
-- [X] T067 Revisar `specs/001-registrar-proveedor/quickstart.md` y actualizarlo solo si algún paso
-  de puesta en marcha cambió durante la implementación (por ejemplo, el nombre exacto de la
-  migración `InicialProveedor`). Depende de T066. Revisado: coincide exactamente con la
-  implementación (nombre de migración, rutas, comando `dotnet user-secrets`); sin cambios
-  necesarios.
-- [X] T068 [P] Verificar la tabla de trazabilidad de este documento contra `spec.md`: confirmar que
-  cada requisito funcional (FR-001 a FR-020) y cada criterio de éxito (SC-001 a SC-006) tiene al
-  menos una tarea de implementación o prueba asociada. Depende de T065. Verificado: la tabla de
-  Trazabilidad (más abajo) cubre FR-001 a FR-020 y SC-001 a SC-006; FR-021 (agregado en
-  `spec.md` el 2026-09-03) queda fuera del alcance literal de esta tarea y no tiene tarea
-  dedicada por decisión explícita previa del usuario de no modificar tasks.md/plan.md para esa
-  clarificación; su comportamiento ya queda cubierto por la infraestructura existente de manejo
-  de errores (T010, ProblemDetails) y la atomicidad de `SaveChangesAsync` (T041).
-- [X] T069 [P] Revisar `specs/001-registrar-proveedor/checklists/calidad.md` (ítems CHK008, CHK028,
-  CHK029 sobre el identificador fiscal) y dejar constancia, en el propio código (comentarios de
-  T017) o en la revisión de esta tarea, de que no se resolvieron inventando nuevas reglas de
-  negocio no aprobadas. Depende de T065. Verificado: CHK008/CHK009/CHK018/CHK029 ya están
-  marcados `[x]` en calidad.md (resueltos por clarificación de sesión 2026-09-03 e implementados
-  en Fase 11); CHK028 también `[x]`; ninguna regla de negocio nueva no aprobada se agregó.
 
 ---
 
@@ -641,6 +651,7 @@ No se crean recursos Azure en ninguna fase de esta lista de tareas.
 | FR-018 (mensaje de duplicado sin exponer datos) | T047, T055 |
 | FR-019 (autenticación/autorización) | Fuera de alcance (no se implementa un proveedor de autenticación real); la arquitectura queda preparada mediante el puerto `IUsuarioActual` (T035) y su implementación temporal `UsuarioActualHttp` (T044), sin exponer `RegistradoPor` como dato editable por el cliente (corrección U1) |
 | FR-020 (razón social no única) | T039, T058 |
+| FR-021 (falla técnica: no considerar registrado, informar claro, sin detalles técnicos) | T076 |
 | SC-001 (registro exitoso en un intento) | T053, T066 |
 | SC-002 (100% rechazos por datos inválidos) | T054, T066 |
 | SC-003 (100% rechazos por duplicado) | T055, T056, T066 |

@@ -2,12 +2,15 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Time.Testing;
 using SupplierOnboarding.Api.Proveedores;
 using SupplierOnboarding.Application.Identidad;
+using SupplierOnboarding.Domain.Proveedores;
+using SupplierOnboarding.Infrastructure.Persistencia;
 using SupplierOnboarding.IntegrationTests.Persistencia;
 
 namespace SupplierOnboarding.IntegrationTests.Api;
@@ -83,9 +86,45 @@ public sealed class ProveedorEndpointsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Created, respuestaHttp.StatusCode);
         var proveedor = await respuestaHttp.Content.ReadFromJsonAsync<ProveedorRespuesta>();
         Assert.NotNull(proveedor);
-        Assert.Equal("Pendiente", proveedor!.Estado);
+        Assert.NotEqual(Guid.Empty, proveedor!.Id);
+        Assert.Equal("Pendiente", proveedor.Estado);
         Assert.Equal(IdentificadorUsuarioDePrueba, proveedor.RegistradoPor);
         Assert.Equal(InstanteDePrueba, proveedor.RegistradoEn);
+    }
+
+    [Fact]
+    public async Task PostProveedores_ConDatosValidos_PersisteRealmenteElProveedorEnLaBaseDeDatos()
+    {
+        var solicitud = SolicitudValida(identificadorFiscal: $"T053B-{Guid.NewGuid():N}");
+
+        var respuestaHttp = await _cliente.PostAsJsonAsync("/api/proveedores", solicitud);
+        var proveedor = await respuestaHttp.Content.ReadFromJsonAsync<ProveedorRespuesta>();
+
+        var opciones = new DbContextOptionsBuilder<SupplierOnboardingDbContext>()
+            .UseSqlServer(_fixtureSqlServer.CadenaConexion)
+            .Options;
+        await using var dbContext = new SupplierOnboardingDbContext(opciones);
+        var persistido = await dbContext.Proveedores.AsNoTracking()
+            .SingleOrDefaultAsync(p => p.Id == proveedor!.Id);
+
+        Assert.NotNull(persistido);
+        Assert.Equal(solicitud.IdentificadorFiscal, persistido!.IdentificadorFiscal);
+        Assert.Equal(IdentificadorUsuarioDePrueba, persistido.RegistradoPor);
+        Assert.Equal(InstanteDePrueba, persistido.RegistradoEn);
+    }
+
+    [Fact]
+    public async Task PostProveedores_ConRazonSocialVacia_Devuelve400ConUnSoloErrorDeRazonSocial()
+    {
+        var solicitud = SolicitudValida() with { RazonSocial = "   " };
+
+        var respuestaHttp = await _cliente.PostAsJsonAsync("/api/proveedores", solicitud);
+
+        Assert.Equal(HttpStatusCode.BadRequest, respuestaHttp.StatusCode);
+        var errores = await respuestaHttp.Content.ReadFromJsonAsync<ErroresValidacion>();
+        Assert.NotNull(errores);
+        Assert.Single(errores!.Errores);
+        Assert.Contains("razón social", errores.Errores[0].Mensaje, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -161,6 +200,54 @@ public sealed class ProveedorEndpointsTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.Created, primeraRespuesta.StatusCode);
         Assert.Equal(HttpStatusCode.Created, segundaRespuesta.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostProveedores_AnteFallaTecnicaDePersistenciaDistintaDeDuplicado_DevuelveErrorGenericoSinFiltrarDetallesYSinPersistirNada()
+    {
+        var identificadorFiscal = $"T076-{Guid.NewGuid():N}";
+
+        using var fabricaConFallaTecnica = _fabrica.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<IProveedorRepository>();
+                services.AddScoped<IProveedorRepository, ProveedorRepositoryFallaTecnica>();
+            });
+        });
+        using var clienteConFallaTecnica = fabricaConFallaTecnica.CreateClient();
+
+        var respuestaHttp = await clienteConFallaTecnica.PostAsJsonAsync(
+            "/api/proveedores", SolicitudValida(identificadorFiscal: identificadorFiscal));
+
+        Assert.True(
+            (int)respuestaHttp.StatusCode >= 500,
+            $"Se esperaba un error de servidor (5xx), pero se recibió {(int)respuestaHttp.StatusCode}.");
+
+        var cuerpo = await respuestaHttp.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("SqlException", cuerpo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Microsoft.Data.SqlClient", cuerpo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("System.Data", cuerpo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(nameof(InvalidOperationException), cuerpo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("   at ", cuerpo);
+
+        // FR-021: el proveedor no debe considerarse registrado, ni parcial ni exitosamente.
+        var opciones = new DbContextOptionsBuilder<SupplierOnboardingDbContext>()
+            .UseSqlServer(_fixtureSqlServer.CadenaConexion)
+            .Options;
+        await using var dbContext = new SupplierOnboardingDbContext(opciones);
+        var existe = await dbContext.Proveedores.AnyAsync(p => p.IdentificadorFiscal == identificadorFiscal);
+        Assert.False(existe);
+    }
+
+    private sealed class ProveedorRepositoryFallaTecnica : IProveedorRepository
+    {
+        public Task<bool> ExisteAsync(string pais, string identificadorFiscalNormalizado, CancellationToken cancellationToken) =>
+            Task.FromResult(false);
+
+        public Task<ResultadoAlmacenamientoProveedor> AgregarAsync(Proveedor proveedor, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException(
+                "Simulación de falla técnica de persistencia (T076/FR-021), distinta de un conflicto por duplicado.");
     }
 
     private sealed class UsuarioActualDePrueba : IUsuarioActual

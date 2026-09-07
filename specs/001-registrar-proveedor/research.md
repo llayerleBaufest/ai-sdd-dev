@@ -166,6 +166,38 @@ de planificación.
   arquitectónica en disputa; no introduce microservicios, mensajería ni un proveedor de
   autenticación concreto.
 
+## 12. Estrategia de configuración de la cadena de conexión por ambiente
+
+- **Decisión**: la aplicación usa exclusivamente el mecanismo estándar de configuración de
+  ASP.NET Core (`IConfiguration`, `builder.Configuration.GetConnectionString("SupplierOnboarding")`
+  en `Program.cs`), sin ninguna lógica propia de resolución; la fuente concreta del valor varía
+  según el ambiente: **Development local** usa .NET User Secrets (clave
+  `ConnectionStrings:SupplierOnboarding`, nunca en `appsettings.json` ni en
+  `appsettings.Development.json`); **`SupplierOnboarding.IntegrationTests`** sobrescribe esa misma
+  clave dinámicamente con la cadena de conexión del contenedor SQL Server efímero de Testcontainers
+  (ver ítem 6/ADR-0006), sin depender de User Secrets; **Azure** (cuando se despliegue Azure SQL
+  Database) deberá preferir autenticación mediante Microsoft Entra ID / Managed Identity en lugar
+  de usuario y contraseña almacenados, concretándose recién cuando exista el recurso Azure
+  correspondiente (fuera de alcance de esta fase; no se crean recursos Azure en esta tarea).
+- **Justificación**: aplica directamente el Principio II de la Constitution ("Seguridad por
+  Defecto": los secretos NUNCA DEBEN almacenarse en el repositorio ni incorporarse al código
+  fuente; DEBEN preferirse Managed Identities frente a credenciales almacenadas siempre que el
+  servicio lo permita) usando únicamente mecanismos estándar de .NET/ASP.NET Core (User Secrets,
+  `IConfiguration`, sobrescritura de configuración en pruebas vía `WebApplicationFactory`), sin
+  introducir ninguna abstracción propia de resolución de configuración ni cambio de código por
+  ambiente.
+- **Alternativas consideradas**: almacenar la cadena de conexión de desarrollo directamente en
+  `appsettings.Development.json` (descartada: viola el Principio II al dejar credenciales en un
+  archivo versionado); usar variables de entorno del sistema operativo en lugar de User Secrets
+  para Development (descartada por ahora: User Secrets es el mecanismo estándar recomendado por
+  .NET para este escenario y el proyecto ya tiene `UserSecretsId` configurado); usar EF Core
+  InMemory/SQLite en Integration Tests para evitar depender de una cadena de conexión real
+  (descartada, ver ítem 6: no refleja restricciones de unicidad reales de SQL Server).
+- No amerita un ADR independiente: aplica mecanismos estándar del framework (`IConfiguration`,
+  User Secrets, sobrescritura de configuración en `WebApplicationFactory`) y una política de
+  seguridad ya establecida por la Constitution (Principio II), sin una alternativa arquitectónica
+  en disputa, siguiendo el mismo criterio que los ítems 9-11.
+
 ## Resolución de "NEEDS CLARIFICATION"
 
 No quedan elementos marcados como `NEEDS CLARIFICATION` en el Contexto Técnico de `plan.md`. Los

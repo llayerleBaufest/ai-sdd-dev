@@ -48,7 +48,16 @@ public static class ProveedorEndpoints
                     throw new InvalidOperationException($"Resultado de caso de uso no soportado: {resultado}.");
             }
         })
-        .WithName("RegistrarProveedor");
+        .WithName("RegistrarProveedor")
+        .WithSummary("Registra un nuevo proveedor")
+        .WithDescription(
+            "Registra un proveedor con los cinco datos obligatorios (FR-001); queda en estado " +
+            "Pendiente (FR-012) con identidad propia y auditoría (FR-014, FR-015) devueltas en la " +
+            "misma respuesta.")
+        .WithTags("Proveedores")
+        .Produces<ProveedorRespuesta>(StatusCodes.Status201Created)
+        .Produces<ErroresValidacion>(StatusCodes.Status400BadRequest)
+        .Produces<ErrorDuplicado>(StatusCodes.Status409Conflict);
     }
 
     private static ProveedorRespuesta AProveedorRespuesta(Proveedor proveedor) =>

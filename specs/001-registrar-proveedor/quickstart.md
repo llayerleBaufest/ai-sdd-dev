@@ -26,22 +26,35 @@ código de producción.
      -p 1433:1433 --name sqlserver-dev -d mcr.microsoft.com/mssql/server:2022-latest
    ```
 
-2. Configurar la cadena de conexión de desarrollo (por ejemplo, mediante `dotnet user-secrets` en
-   `SupplierOnboarding.Api`, nunca en el repositorio, conforme al Principio II de la Constitution):
+2. Inicializar (si hiciera falta) y configurar la cadena de conexión de desarrollo mediante
+   `dotnet user-secrets` en `SupplierOnboarding.Api`, nunca en `appsettings.json` ni en
+   `appsettings.Development.json`, conforme al Principio II de la Constitution (ver research.md
+   punto 12). `SupplierOnboarding.Api.csproj` ya tiene un `UserSecretsId` configurado, por lo que
+   `init` normalmente no es necesario; se incluye por completitud:
 
    ```powershell
+   dotnet user-secrets init --project src/SupplierOnboarding.Api
+
    dotnet user-secrets set "ConnectionStrings:SupplierOnboarding" `
      "Server=localhost;Database=SupplierOnboarding;User Id=sa;Password=<contraseña-local-de-desarrollo>;TrustServerCertificate=True" `
      --project src/SupplierOnboarding.Api
    ```
 
-3. Aplicar las migraciones de EF Core:
+3. Verificar que la clave quedó configurada **sin exponer el valor secreto** en capturas, tickets
+   o logs compartidos: `dotnet user-secrets list --project src/SupplierOnboarding.Api` confirma
+   localmente que la clave `ConnectionStrings:SupplierOnboarding` existe (evitar copiar esa salida
+   a cualquier lugar compartido, ya que el comando sí imprime el valor completo); de forma
+   preferente, verificar de manera indirecta ejecutando los pasos 4 y 5: si la cadena es inválida
+   o falta, las migraciones o el arranque de la API fallan explícitamente sin necesidad de
+   imprimir el secreto en ningún lado.
+
+4. Aplicar las migraciones de EF Core:
 
    ```powershell
    dotnet ef database update --project src/SupplierOnboarding.Infrastructure --startup-project src/SupplierOnboarding.Api
    ```
 
-4. Ejecutar la API:
+5. Ejecutar la API:
 
    ```powershell
    dotnet run --project src/SupplierOnboarding.Api
@@ -103,6 +116,13 @@ dotnet test tests/SupplierOnboarding.UnitTests
 # Pruebas de integración (requieren Docker en ejecución para Testcontainers)
 dotnet test tests/SupplierOnboarding.IntegrationTests
 ```
+
+`SupplierOnboarding.IntegrationTests` **no** requiere configurar manualmente
+`ConnectionStrings:SupplierOnboarding` (ni mediante User Secrets ni de ninguna otra forma): la
+cadena de conexión al SQL Server efímero la provee dinámicamente Testcontainers y se sobrescribe
+en la configuración de la aplicación de pruebas (`WebApplicationFactory`), conforme a ADR-0006 y
+research.md punto 12. Ningún secreto real debe agregarse a `appsettings.json`, archivos de
+configuración versionados ni código fuente, en ningún ambiente.
 
 ## Trazabilidad de criterios de éxito
 
