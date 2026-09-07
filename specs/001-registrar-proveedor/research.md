@@ -169,7 +169,7 @@ de planificación.
 ## Resolución de "NEEDS CLARIFICATION"
 
 No quedan elementos marcados como `NEEDS CLARIFICATION` en el Contexto Técnico de `plan.md`. Los
-objetivos de rendimiento no cuantificados (SC-001, "confirmación inmediata") se documentan como un
-gap ya identificado en el checklist de calidad (CHK018) y no se resuelven aquí inventando un
-umbral no aprobado por el negocio; este plan no depende de dicho umbral para ninguna decisión
-técnica.
+objetivos de rendimiento no cuantificados (SC-001, "confirmación inmediata") quedaron diferidos
+explícitamente como decisión de negocio pendiente (ver spec.md, Clarificaciones sesión 2026-09-03)
+y no se resuelven aquí inventando un umbral no aprobado por el negocio; este plan no depende de
+dicho umbral para ninguna decisión técnica.

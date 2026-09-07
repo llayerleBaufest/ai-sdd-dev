@@ -43,6 +43,32 @@
   identidad ya existente del proveedor y se definirán mediante especificaciones independientes;
   esta especificación no introduce un modelo de "Onboarding", historial de onboarding, nuevos
   estados ni decisiones de arquitectura al respecto.
+### Sesión 2026-09-03
+
+- P: Cuando la normalización del identificador fiscal (FR-010) elimina todos los caracteres y el
+  resultado queda vacío (por ejemplo, un identificador original compuesto solo por espacios o
+  separadores), ¿el sistema debe rechazar el registro por identificador fiscal inválido, o debe
+  permitirlo igualmente? → R: Debe rechazarse, tratando el identificador fiscal como inválido
+  (mismo tratamiento que FR-004).
+- P: ¿Existen datos adicionales opcionales del proveedor más allá de los cinco datos obligatorios
+  en este alcance? → R: No. El registro utiliza únicamente los cinco datos obligatorios ya
+  definidos (FR-001); la incorporación de información adicional del proveedor se realizará
+  mediante especificaciones futuras.
+- P: ¿Qué contenido mínimo debe incluir la confirmación de un registro exitoso (FR-016)? → R: Debe
+  incluir, como mínimo, el identificador interno asignado, la razón social, el país, el
+  identificador fiscal original, el estado inicial, el usuario que realizó el registro y la fecha
+  y hora de registro, sin definir todavía el formato HTTP ni la representación JSON concretos.
+- P: ¿Qué debe ocurrir si una falla impide completar correctamente el registro? → R: El proveedor
+  no debe considerarse registrado, ni parcial ni exitosamente, y el usuario debe recibir una
+  indicación clara de que la operación no pudo completarse, sin especificar aquí códigos de
+  protocolo, mecanismos de transacción ni reintentos concretos.
+- P: ¿Deben los Criterios de Éxito (SC-001 a SC-006) evitar expresiones subjetivas no cuantificadas
+  (por ejemplo "inmediato")? → R: Sí. Se elimina la expresión "confirmación inmediata" de SC-001 en
+  favor de un resultado observable y verificable de forma binaria, sin inventar objetivos de
+  rendimiento no solicitados por el negocio.
+- P: ¿Debe cada requisito funcional (FR-001 a FR-020) contar con al menos un escenario de
+  aceptación que lo verifique? → R: Sí. Se agregan los escenarios mínimos faltantes para FR-018,
+  FR-019 y FR-020, sin ampliar el alcance funcional.
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
@@ -76,6 +102,13 @@ trazabilidad de quién y cuándo lo registró.
    determinado, **Cuando** un usuario registra un proveedor distinto en un país diferente que
    posee el mismo valor textual de identificador fiscal, **Entonces** el nuevo proveedor se
    registra exitosamente como una entidad independiente.
+5. **Dado** que dos proveedores distintos comparten exactamente la misma razón social pero poseen
+   una combinación distinta de país e identificador fiscal, **Cuando** ambos se registran,
+   **Entonces** ambos registros se completan exitosamente como entidades independientes (FR-020).
+6. **Dado** que la autenticación y autorización de usuarios internos se asumen provistas por una
+   capacidad existente fuera de este alcance (FR-019), **Cuando** un usuario ya autenticado
+   ejecuta el registro, **Entonces** el sistema no valida aquí mecanismos concretos de
+   autenticación/autorización, asumiendo que dicha validación ya fue realizada previamente.
 
 ---
 
@@ -140,6 +173,9 @@ de la existencia previa.
    identificador fiscal que difiere únicamente en diferencias de formato irrelevantes (por ejemplo
    espacios adicionales, mayúsculas/minúsculas o separadores) que no alteran su significado,
    **Entonces** el nuevo registro se rechaza por ser considerado el mismo proveedor.
+3. **Dado** que un intento de registro se rechaza por tratarse de un proveedor duplicado,
+   **Cuando** el usuario recibe la respuesta del rechazo, **Entonces** dicha respuesta no expone
+   la identidad interna, la razón social ni el estado del proveedor existente (FR-018).
 
 ---
 
@@ -156,6 +192,13 @@ de la existencia previa.
 - ¿Qué sucede si se proporciona más de un dato obligatorio inválido en el mismo intento de
   registro? El usuario debe recibir información suficiente para identificar todos los datos que
   deben corregirse, no solo el primero detectado.
+- ¿Qué sucede si el identificador fiscal, tras aplicar la normalización de FR-010 (eliminar
+  espacios y separadores), queda vacío (por ejemplo, un valor compuesto únicamente por
+  separadores como "---")? El registro debe rechazarse, tratando el identificador fiscal como
+  inválido (mismo tratamiento que FR-004).
+- ¿Qué sucede si ocurre una falla que impide completar correctamente el registro (FR-021)? El
+  proveedor no debe considerarse registrado, ni parcial ni exitosamente, y el usuario debe recibir
+  una indicación clara de que la operación no pudo completarse.
 
 ## Requisitos *(obligatorio)*
 
@@ -174,7 +217,10 @@ de la existencia previa.
 - **FR-005**: El sistema DEBE rechazar el registro si el nombre de la persona de contacto está
   vacío.
 - **FR-006**: El sistema DEBE rechazar el registro si el correo electrónico de contacto no tiene un
-  formato válido.
+  formato válido. Se considera "formato válido" un criterio permisivo basado en el estándar RFC
+  de direcciones de correo (no exige, por ejemplo, que el dominio contenga un punto), sin
+  verificar pertenencia real a un dominio ni entregabilidad (ver Clarificaciones, sesión
+  2026-09-03).
 - **FR-007**: El sistema DEBE identificar de manera única a cada proveedor mediante la combinación
   de país e identificador fiscal.
 - **FR-008**: El sistema NO DEBE permitir la existencia de dos proveedores con la misma combinación
@@ -188,7 +234,9 @@ de la existencia previa.
   identificadores fiscales que difieran únicamente en diferencias de formato irrelevantes. Para
   ello, antes de comparar dos identificadores fiscales del mismo país, el sistema DEBE eliminar
   los espacios en blanco, convertir el texto a mayúsculas y eliminar los separadores comunes
-  (guiones, puntos y barras), comparando luego el resultado como texto plano.
+  (guiones, puntos y barras), comparando luego el resultado como texto plano. Si, tras aplicar
+  esta normalización, el resultado queda vacío, el sistema DEBE rechazar el registro tratando el
+  identificador fiscal como inválido (mismo tratamiento que FR-004).
 - **FR-011**: El sistema DEBE permitir el registro de proveedores en países diferentes que posean el
   mismo valor textual de identificador fiscal, siempre que la combinación de país e identificador
   fiscal sea distinta entre ellos.
@@ -205,7 +253,12 @@ de la existencia previa.
 - **FR-015**: El sistema DEBE conservar, para cada proveedor registrado, quién realizó el registro,
   la fecha y hora en que fue registrado, y el estado inicial que se le asignó.
 - **FR-016**: Cuando el registro sea exitoso, el sistema DEBE confirmar al usuario que el proveedor
-  quedó registrado correctamente.
+  quedó registrado correctamente. Dicha confirmación DEBE incluir, como mínimo, el identificador
+  interno asignado, la razón social, el país, el identificador fiscal original, el estado inicial,
+  el usuario que realizó el registro y la fecha y hora de registro, de modo que el proveedor
+  creado quede identificado de forma inequívoca (ver Clarificaciones, sesión 2026-09-03). Esta
+  especificación no define el formato HTTP ni la representación JSON concreta de dicha
+  confirmación.
 - **FR-017**: Cuando el registro sea rechazado por datos obligatorios inválidos, el sistema DEBE
   informar al usuario, de forma clara, cuáles datos deben corregirse.
 - **FR-018**: Cuando el registro sea rechazado por tratarse de un proveedor ya existente, el
@@ -218,6 +271,11 @@ de la existencia previa.
 - **FR-020**: El sistema NO DEBE exigir que la razón social sea única; distintos proveedores
   pueden compartir la misma razón social, siempre que su combinación de país e identificador
   fiscal sea diferente.
+- **FR-021**: Si ocurre una falla que impide completar correctamente el registro, el sistema NO
+  DEBE considerar al proveedor registrado, ni parcial ni exitosamente, y DEBE informar al usuario
+  de forma clara que la operación no pudo completarse (ver Clarificaciones, sesión 2026-09-03).
+  Esta especificación no define códigos de protocolo, mecanismos de transacción, reintentos ni
+  otros detalles técnicos concretos.
 
 ### Entidades Clave
 
@@ -233,7 +291,11 @@ de la existencia previa.
 ### Resultados Medibles
 
 - **SC-001**: Un usuario autorizado puede completar el registro de un proveedor válido en un único
-  intento, recibiendo confirmación inmediata del éxito.
+  intento, y la respuesta a esa misma operación de registro le confirma el éxito sin requerir una
+  consulta ni un paso adicional. Esta especificación no define un umbral numérico de tiempo de
+  respuesta: dicho umbral, si resulta necesario, se definirá como un requisito de rendimiento
+  independiente cuando exista una necesidad de negocio explícita que lo justifique (ver
+  Clarificaciones, sesión 2026-09-03).
 - **SC-002**: El 100% de los intentos de registro con al menos un dato obligatorio inválido son
   rechazados y devuelven al usuario información suficiente para identificar qué corregir.
 - **SC-003**: El 100% de los intentos de registro de un proveedor con una combinación de país e
@@ -255,11 +317,19 @@ de la existencia previa.
 - Se asume que las diferencias de formato irrelevantes en el identificador fiscal se resuelven
   eliminando espacios adicionales, diferencias de mayúsculas/minúsculas y separadores comunes (por
   ejemplo guiones, puntos o barras), sin que esto implique validar la estructura o composición
-  propia del identificador fiscal de cada país.
+  propia del identificador fiscal de cada país. No se restringe el conjunto de caracteres
+  permitido en el identificador fiscal más allá de no estar vacío tras aplicar dicha
+  normalización (ver Clarificaciones, sesión 2026-09-03).
 - Esta especificación no define longitudes máximas ni formatos adicionales para la razón social, el
   identificador fiscal o el nombre de contacto más allá de la condición de no estar vacíos.
+- Se asume que, en el alcance de esta especificación, no existen datos opcionales adicionales del
+  proveedor más allá de los cinco datos obligatorios (FR-001); la incorporación de información
+  adicional del proveedor se definirá mediante especificaciones futuras (ver Clarificaciones,
+  sesión 2026-09-03).
 - Se asume que la validación del correo electrónico de contacto se limita a verificar su formato;
-  no se exige pertenencia a un dominio específico ni unicidad entre proveedores.
+  no se exige pertenencia a un dominio específico ni unicidad entre proveedores. Dicha validación
+  aplica un criterio permisivo basado en RFC (ver FR-006, Clarificaciones sesión 2026-09-03), sin
+  exigir que el dominio contenga un punto ni verificar entregabilidad real.
 - Se asume que la autenticación y autorización de usuarios internos son provistas por una
   capacidad existente del sistema, fuera del alcance de esta especificación.
 - Se asume que el registro de un proveedor es una operación transaccional individual; no se

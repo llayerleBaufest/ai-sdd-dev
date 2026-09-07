@@ -20,3 +20,4 @@ ADR que la reemplaza y se referencia mutuamente.
 | [ADR-0006](./ADR-0006-estrategia-pruebas-integracion.md) | Estrategia de pruebas de integración | Aceptada | 001-registrar-proveedor |
 | [ADR-0007](./ADR-0007-decision-fluentvalidation.md) | Decisión sobre FluentValidation | Aceptada | 001-registrar-proveedor |
 | [ADR-0008](./ADR-0008-estrategia-observabilidad.md) | Estrategia inicial de observabilidad | Aceptada | 001-registrar-proveedor |
+| [ADR-0009](./ADR-0009-documentacion-interactiva-openapi-scalar.md) | Documentación interactiva de la API (OpenAPI nativo + Scalar) | Aceptada | 001-registrar-proveedor |

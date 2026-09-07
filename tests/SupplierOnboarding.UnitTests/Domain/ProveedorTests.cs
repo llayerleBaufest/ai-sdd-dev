@@ -62,6 +62,16 @@ public class ProveedorTests
         Assert.Throws<ArgumentException>(() => CrearProveedorValido(identificadorFiscal: ""));
     }
 
+    [Theory]
+    [InlineData("---")]
+    [InlineData("   ")]
+    public void Constructor_ConIdentificadorFiscalQueNormalizaAVacio_LanzaArgumentException(string identificadorFiscal)
+    {
+        // FR-010/FR-004 (Clarificación sesión 2026-09-03): mismo tratamiento que un identificador
+        // fiscal vacío cuando la normalización deja un texto vacío.
+        Assert.Throws<ArgumentException>(() => CrearProveedorValido(identificadorFiscal: identificadorFiscal));
+    }
+
     [Fact]
     public void Constructor_ConNombreContactoVacio_LanzaArgumentException()
     {

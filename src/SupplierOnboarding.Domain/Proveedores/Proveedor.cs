@@ -11,23 +11,28 @@ public sealed class Proveedor
 {
     public Guid Id { get; }
 
-    public string RazonSocial { get; }
+    public string RazonSocial { get; } = null!;
 
-    public string Pais { get; }
+    public string Pais { get; } = null!;
 
-    public string IdentificadorFiscal { get; }
+    public string IdentificadorFiscal { get; } = null!;
 
-    public IdentificadorFiscalNormalizado IdentificadorFiscalNormalizado { get; }
+    public IdentificadorFiscalNormalizado IdentificadorFiscalNormalizado { get; } = null!;
 
-    public string NombreContacto { get; }
+    public string NombreContacto { get; } = null!;
 
-    public string CorreoContacto { get; }
+    public string CorreoContacto { get; } = null!;
 
     public EstadoProveedor Estado { get; }
 
-    public string RegistradoPor { get; }
+    public string RegistradoPor { get; } = null!;
 
     public DateTimeOffset RegistradoEn { get; }
+
+    // Requerido por EF Core para materializar vía campos de respaldo (Infrastructure); no se usa desde Application/Domain.
+    private Proveedor()
+    {
+    }
 
     /// <param name="instante">
     /// Instante de registro, obtenido por Application mediante <c>TimeProvider</c> (nunca
@@ -59,6 +64,13 @@ public sealed class Proveedor
             throw new ArgumentException("El identificador fiscal no puede estar vacío.", nameof(identificadorFiscal));
         }
 
+        var identificadorFiscalNormalizado = IdentificadorFiscalNormalizado.Normalizar(identificadorFiscal);
+        if (string.IsNullOrEmpty(identificadorFiscalNormalizado.Valor))
+        {
+            // FR-010/FR-004 (Clarificación sesión 2026-09-03): mismo tratamiento que un identificador vacío.
+            throw new ArgumentException("El identificador fiscal no puede estar vacío.", nameof(identificadorFiscal));
+        }
+
         if (string.IsNullOrWhiteSpace(nombreContacto))
         {
             throw new ArgumentException("El nombre de contacto no puede estar vacío.", nameof(nombreContacto));
@@ -79,7 +91,7 @@ public sealed class Proveedor
         RazonSocial = razonSocial;
         Pais = pais;
         IdentificadorFiscal = identificadorFiscal;
-        IdentificadorFiscalNormalizado = IdentificadorFiscalNormalizado.Normalizar(identificadorFiscal);
+        IdentificadorFiscalNormalizado = identificadorFiscalNormalizado;
         NombreContacto = nombreContacto;
         CorreoContacto = correoContacto;
         Estado = EstadoProveedor.Pendiente;

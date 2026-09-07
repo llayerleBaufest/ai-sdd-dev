@@ -1,0 +1,38 @@
+@SupplierOnboarding.Api_HostAddress = https://localhost:7000
+
+### Registrar proveedor - registro exitoso (201 Created)
+POST {{SupplierOnboarding.Api_HostAddress}}/api/proveedores
+Content-Type: application/json
+
+{
+  "razonSocial": "Acme S.A.",
+  "pais": "AR",
+  "identificadorFiscal": "30-12345678-9",
+  "nombreContacto": "Jane Doe",
+  "correoContacto": "jane.doe@acme.com"
+}
+
+### Registrar proveedor - datos obligatorios inválidos (400 Bad Request)
+POST {{SupplierOnboarding.Api_HostAddress}}/api/proveedores
+Content-Type: application/json
+
+{
+  "razonSocial": "   ",
+  "pais": "ZZ",
+  "identificadorFiscal": "",
+  "nombreContacto": "",
+  "correoContacto": "no-es-un-correo"
+}
+
+### Registrar proveedor - duplicado por país + identificador fiscal (409 Conflict)
+# Ejecutar dos veces seguidas la misma solicitud para reproducir el conflicto.
+POST {{SupplierOnboarding.Api_HostAddress}}/api/proveedores
+Content-Type: application/json
+
+{
+  "razonSocial": "Beta Corp.",
+  "pais": "AR",
+  "identificadorFiscal": "20-98765432-1",
+  "nombreContacto": "John Smith",
+  "correoContacto": "john.smith@beta.com"
+}

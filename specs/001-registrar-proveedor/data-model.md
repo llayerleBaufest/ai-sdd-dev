@@ -101,12 +101,13 @@ infraestructura:
 - **Transformación**: eliminar espacios en blanco → convertir a mayúsculas → eliminar `-`, `.`, `/`.
 - **Salida**: texto normalizado, usado únicamente para comparar y para el índice único de base de
   datos; nunca se muestra al usuario en lugar del valor original.
-- **Caso límite abierto (CHK029 del checklist de calidad)**: si tras normalizar el resultado queda
-  vacío (por ejemplo, un identificador fiscal compuesto solo por separadores), este plan **no**
-  inventa una regla de negocio no aprobada. Se documenta como comportamiento a confirmar por el
-  negocio antes de la implementación; de no resolverse antes de `tasks.md`, la implementación debe
-  tratarlo de forma explícita y trazable (por ejemplo, seguir tratándolo como valor no vacío desde
-  FR-004, sin agregar una nueva regla de rechazo no solicitada) y señalarse en la revisión.
+- **Caso límite resuelto (CHK029 del checklist de calidad)**: si tras normalizar el resultado queda
+  vacío (por ejemplo, un identificador fiscal compuesto solo por separadores), el registro DEBE
+  rechazarse, tratándolo con el mismo tratamiento que un identificador fiscal vacío (FR-004). Esta
+  decisión quedó resuelta en `spec.md` (Clarificaciones, Sesión 2026-09-03) y se implementa como
+  una guard clause adicional en el constructor de `Proveedor` (Domain) y como una regla adicional
+  en `RegistrarProveedorValidador` (Application); no se agrega ninguna restricción de negocio más
+  allá de esta (ver tasks.md, Fase 11: T070-T074).
 
 ## Catálogo: CatalogoPaisesIso3166
 

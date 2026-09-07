@@ -40,7 +40,11 @@ xUnit, `TimeProvider` (abstracción nativa de .NET, sin paquete adicional, usada
 obtener el instante de registro sin que Domain dependa de un reloj global). También se define
 `IUsuarioActual` (abstracción propia y mínima, sin paquete NuGet) en Application, implementada en
 Api, para obtener el identificador del usuario autenticado que ejecuta el registro sin que
-Application ni Domain dependan de ASP.NET Core, `ClaimsPrincipal` ni `HttpContext`. Ver
+Application ni Domain dependan de ASP.NET Core, `ClaimsPrincipal` ni `HttpContext`. Para
+documentación interactiva/prueba manual en `Development` (capacidad de Developer Experience, sin
+requisito funcional asociado en `spec.md`): soporte nativo de OpenAPI de ASP.NET Core en .NET 10
+(`Microsoft.AspNetCore.OpenApi`, `AddOpenApi()`/`MapOpenApi()`) y `Scalar.AspNetCore` exclusivamente
+como UI de desarrollo, gateada a `Development`; no se incorpora Swashbuckle (ver ADR-0009). Ver
 [research.md](./research.md) para las decisiones sobre FluentValidation (rechazada por ahora),
 Testcontainers (adoptada solo para pruebas de integración) e `IUsuarioActual`.
 
@@ -60,10 +64,10 @@ destino cloud futuro considerado Azure Container Apps (no se crea en esta fase; 
 especificación.
 
 **Objetivos de Rendimiento**: No cuantificados por la especificación. SC-001 exige "confirmación
-inmediata del éxito" sin definir un umbral numérico (gap ya identificado en
-[checklists/calidad.md](./checklists/calidad.md), ítem CHK018); este plan no inventa un umbral no
-aprobado por el negocio. Se aplican prácticas estándar de rendimiento de ASP.NET Core sin metas
-numéricas adicionales en esta fase.
+inmediata del éxito" sin definir un umbral numérico; esto quedó diferido explícitamente como
+decisión de negocio pendiente (ver spec.md, Clarificaciones sesión 2026-09-03), sin que este plan
+invente un umbral no aprobado por el negocio. Se aplican prácticas estándar de rendimiento de
+ASP.NET Core sin metas numéricas adicionales en esta fase.
 
 **Restricciones**: Ninguna restricción numérica de latencia, memoria u operación offline está
 definida por la especificación. La única restricción dura documentada es la de unicidad
@@ -77,6 +81,24 @@ posteriormente un proveedor ya registrado: los escenarios 2 y 3 de la Historia d
 registro (FR-014, FR-015), por lo que no se incorpora un endpoint de lectura
 (`GET /api/proveedores/{id}`) sin un requisito explícito que lo justifique. No se agregan
 endpoints, entidades ni operaciones adicionales fuera de este alcance.
+
+## Documentación Interactiva de la API (Developer Experience)
+
+Capacidad exclusiva de prueba manual y documentación interactiva del endpoint
+`POST /api/proveedores` en entorno `Development`; no modifica los requisitos funcionales de
+`spec.md` ni el comportamiento observable en otros entornos (ver [ADR-0009](../../docs/adr/ADR-0009-documentacion-interactiva-openapi-scalar.md)):
+
+- El documento OpenAPI se genera con el soporte nativo de ASP.NET Core en .NET 10
+  (`builder.Services.AddOpenApi()`) y se expone mediante `app.MapOpenApi()`.
+- `Scalar.AspNetCore` se agrega exclusivamente como UI interactiva de desarrollo, mapeada mediante
+  `app.MapScalarApiReference()` dentro de un bloque `if (app.Environment.IsDevelopment())`; no
+  queda habilitada por defecto en producción.
+- No se incorpora Swashbuckle, salvo que un requisito futuro específico lo justifique.
+- Se agrega un archivo `.http` versionado (`src/SupplierOnboarding.Api/SupplierOnboarding.Api.http`)
+  con ejemplos de requests para "Registrar proveedor" (registro exitoso, datos inválidos,
+  duplicado), alineados con `contracts/registrar-proveedor.yaml`.
+- No se agregan recursos Azure ni otras tecnologías de documentación (por ejemplo, publicación de
+  un portal de API administrado) sin un requisito que lo justifique.
 
 ## Constitution Check
 
@@ -96,6 +118,12 @@ Fase 1.*
 | Restricciones de Ingeniería y Entorno Azure | No se crean recursos Azure durante la planificación; cualquier recurso futuro pertenecerá exclusivamente a `rg-llayerle-ai-sdd-dev`; no se incorporan Microsoft Foundry, Service Bus, Functions, Document Intelligence u otros servicios no requeridos por esta funcionalidad. | Sí |
 
 **Resultado**: Sin violaciones. No se requiere completar la tabla de Complexity Tracking.
+
+**Nota (2026-09-03)**: La incorporación de OpenAPI nativo + Scalar como documentación interactiva
+(sección anterior) se reevaluó contra el Principio II (Seguridad por Defecto): Scalar queda
+gateado a `Development` y no se habilita por defecto en producción, por lo que no introduce una
+nueva violación. El resto de la tabla no cambia (capacidad de Developer Experience, sin impacto en
+Domain/Application ni en los requisitos funcionales de `spec.md`).
 
 ## Project Structure
 
@@ -152,7 +180,8 @@ src/
 │       └── Migraciones/
 │
 └── SupplierOnboarding.Api/
-    ├── Program.cs                            # Composición: DI, EF Core, OpenTelemetry, endpoints
+    ├── Program.cs                            # Composición: DI, EF Core, OpenTelemetry, OpenAPI/Scalar (solo Development), endpoints
+    ├── SupplierOnboarding.Api.http            # Ejemplos de requests versionados para "Registrar proveedor" (ADR-0009)
     ├── Identidad/
     │   └── UsuarioActualHttp.cs              # Implementación temporal de IUsuarioActual vía ClaimsPrincipal/HttpContext
     └── Proveedores/

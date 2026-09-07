@@ -188,64 +188,64 @@ identidad autenticada).
 
 ### Pruebas de Aplicación (escribir primero; deben fallar antes de implementar)
 
-- [ ] T025 [US2] Prueba unitaria en
+- [X] T025 [US2] Prueba unitaria en
   `tests/SupplierOnboarding.UnitTests/Application/RegistrarProveedor/RegistrarProveedorValidadorTests.cs`
   que verifique que `RegistrarProveedorValidador` acumula **todos** los errores cuando varios
   datos obligatorios son inválidos simultáneamente (Caso Límite de `spec.md`, FR-017), en lugar de
   detenerse en el primero.
-- [ ] T026 [US2] En `RegistrarProveedorValidadorTests.cs`, pruebas unitarias individuales para cada
+- [X] T026 [US2] En `RegistrarProveedorValidadorTests.cs`, pruebas unitarias individuales para cada
   regla FR-002 a FR-006. Depende de T025 (mismo archivo).
-- [ ] T027 [P] Crear el fake en memoria `ProveedorRepositoryFake` (implementación de
+- [X] T027 [P] Crear el fake en memoria `ProveedorRepositoryFake` (implementación de
   `IProveedorRepository` para pruebas, sin biblioteca de mocking) en
   `tests/SupplierOnboarding.UnitTests/Application/RegistrarProveedor/ProveedorRepositoryFake.cs`
   (research.md punto 9). Depende de T024.
-- [ ] T028 [P] Crear el fake `UsuarioActualFake` (implementación de `IUsuarioActual` para pruebas
+- [X] T028 [P] Crear el fake `UsuarioActualFake` (implementación de `IUsuarioActual` para pruebas
   que permite fijar explícitamente el identificador del usuario actual, sin biblioteca de
   mocking) en
   `tests/SupplierOnboarding.UnitTests/Application/RegistrarProveedor/UsuarioActualFake.cs`
   (corrección U1: la identidad del usuario debe poder controlarse de forma determinística en
   pruebas unitarias).
-- [ ] T029 [US1] Prueba unitaria en
+- [X] T029 [US1] Prueba unitaria en
   `tests/SupplierOnboarding.UnitTests/Application/RegistrarProveedor/RegistrarProveedorCasoDeUsoTests.cs`
   para el registro válido: usando `ProveedorRepositoryFake`, un `FakeTimeProvider` con instante
   fijo y `UsuarioActualFake` con un identificador de usuario fijo, verificar que el resultado es
   `Exito`, el proveedor queda `Pendiente`, y que `RegistradoEn`, `Id` y `RegistradoPor` son
   determinísticos según ese instante y ese identificador fijos (FR-015). Depende de T027, T028.
-- [ ] T030 [US3] En `RegistrarProveedorCasoDeUsoTests.cs`, prueba que verifique que si
+- [X] T030 [US3] En `RegistrarProveedorCasoDeUsoTests.cs`, prueba que verifique que si
   `IProveedorRepository.ExisteAsync` (con el identificador fiscal normalizado) devuelve `true`, el
   caso de uso devuelve `Duplicado` sin invocar `AgregarAsync` (FR-009). Depende de T029 (mismo
   archivo).
-- [ ] T031 [US3] En `RegistrarProveedorCasoDeUsoTests.cs`, prueba que verifique que si `ExisteAsync`
+- [X] T031 [US3] En `RegistrarProveedorCasoDeUsoTests.cs`, prueba que verifique que si `ExisteAsync`
   devuelve `false` pero `AgregarAsync` devuelve `ResultadoAlmacenamientoProveedor.ConflictoDuplicado`
   (condición de carrera), el caso de uso también devuelve `Duplicado`, sin lanzar excepción
   (ADR-0005). Depende de T030 (mismo archivo).
-- [ ] T032 [US2] En `RegistrarProveedorCasoDeUsoTests.cs`, prueba que verifique que datos de entrada
+- [X] T032 [US2] En `RegistrarProveedorCasoDeUsoTests.cs`, prueba que verifique que datos de entrada
   inválidos detienen el flujo antes de consultar `IProveedorRepository` y devuelven
   `ErroresValidacion` con todos los errores acumulados. Depende de T031 (mismo archivo).
 
 ### Implementación de Aplicación
 
-- [ ] T033 [P] Implementar `RegistrarProveedorComando` (datos de entrada del caso de uso: razón
+- [X] T033 [P] Implementar `RegistrarProveedorComando` (datos de entrada del caso de uso: razón
   social, país, identificador fiscal, nombre de contacto, correo de contacto) en
   `src/SupplierOnboarding.Application/Proveedores/RegistrarProveedor/RegistrarProveedorComando.cs`
   (FR-001). `RegistrarProveedorComando` NO incluye `RegistradoPor`: el caso de uso lo obtiene de
   `IUsuarioActual`, nunca del cliente HTTP (corrección U1).
-- [ ] T034 [P] Implementar `RegistrarProveedorResultado` (casos `Exito` | `ErroresValidacion` |
+- [X] T034 [P] Implementar `RegistrarProveedorResultado` (casos `Exito` | `ErroresValidacion` |
   `Duplicado`) en
   `src/SupplierOnboarding.Application/Proveedores/RegistrarProveedor/RegistrarProveedorResultado.cs`.
-- [ ] T035 [P] Definir el puerto `IUsuarioActual` en
+- [X] T035 [P] Definir el puerto `IUsuarioActual` en
   `src/SupplierOnboarding.Application/Identidad/IUsuarioActual.cs`: expone únicamente el
   identificador del usuario autenticado (por ejemplo, `string IdentificadorUsuario { get; }`), sin
   ninguna dependencia de ASP.NET Core, `ClaimsPrincipal` ni `HttpContext` en la propia interfaz
   (Principio VI de la Constitution). La autenticación/autorización concretas continúan fuera de
   alcance (FR-019); esta interfaz solo prepara el punto de extensión (corrección U1). Hace pasar
   T028.
-- [ ] T036 [US2] Implementar `RegistrarProveedorValidador` en
+- [X] T036 [US2] Implementar `RegistrarProveedorValidador` en
   `src/SupplierOnboarding.Application/Proveedores/RegistrarProveedor/RegistrarProveedorValidador.cs`:
   validación manual y explícita (sin FluentValidation, ADR-0007) que evalúa de forma independiente
   y acumula errores para FR-002 a FR-006 — validación de entrada, distinta de los invariantes de
   `Proveedor`. Depende de T033. Hace pasar T025 y T026.
-- [ ] T037 Implementar `RegistrarProveedorCasoDeUso` en
+- [X] T037 Implementar `RegistrarProveedorCasoDeUso` en
   `src/SupplierOnboarding.Application/Proveedores/RegistrarProveedor/RegistrarProveedorCasoDeUso.cs`:
   ejecuta `RegistrarProveedorValidador`; si hay errores retorna `ErroresValidacion`; si no, obtiene
   el instante vía `TimeProvider` inyectado y el identificador del usuario actual vía
@@ -269,26 +269,26 @@ infraestructura real (unit tests con fakes en memoria de `IProveedorRepository` 
 **Propósito**: Persistencia con EF Core 10 + SQL Server, incluyendo la restricción `UNIQUE` que
 protege la regla de unicidad ante condiciones de carrera (data-model.md, ADR-0005).
 
-- [ ] T038 Implementar `SupplierOnboardingDbContext` (con `DbSet<Proveedor> Proveedores`) en
+- [X] T038 Implementar `SupplierOnboardingDbContext` (con `DbSet<Proveedor> Proveedores`) en
   `src/SupplierOnboarding.Infrastructure/Persistencia/SupplierOnboardingDbContext.cs`. Depende de
   T022.
-- [ ] T039 Implementar `ProveedorConfiguracion` (`IEntityTypeConfiguration<Proveedor>`) en
+- [X] T039 Implementar `ProveedorConfiguracion` (`IEntityTypeConfiguration<Proveedor>`) en
   `src/SupplierOnboarding.Infrastructure/Persistencia/Configuraciones/ProveedorConfiguracion.cs`:
   mapear `Proveedor` con columnas separadas para `IdentificadorFiscal` (valor original) e
   `IdentificadorFiscalNormalizado` (valor derivado); definir el índice único sobre
   `(Pais, IdentificadorFiscalNormalizado)` — restricción de persistencia que refuerza FR-007/FR-008
   además de la verificación previa en Aplicación (ADR-0005); no se define restricción de unicidad
   sobre `RazonSocial` (FR-020). Depende de T038.
-- [ ] T040 Registrar `ProveedorConfiguracion` en `OnModelCreating` de
+- [X] T040 Registrar `ProveedorConfiguracion` en `OnModelCreating` de
   `src/SupplierOnboarding.Infrastructure/Persistencia/SupplierOnboardingDbContext.cs`. Depende de
   T039.
-- [ ] T041 Implementar `ProveedorRepository` en
+- [X] T041 Implementar `ProveedorRepository` en
   `src/SupplierOnboarding.Infrastructure/Persistencia/ProveedorRepository.cs`: `ExisteAsync`
   consulta por `(Pais, IdentificadorFiscalNormalizado)`; `AgregarAsync` intenta `Add` +
   `SaveChangesAsync`, capturando la violación del índice único (`DbUpdateException`) y
   traduciéndola a `ResultadoAlmacenamientoProveedor.ConflictoDuplicado`, sin propagar excepciones de
   EF Core/SQL Server fuera de `Infrastructure` ni excepciones de dominio. Depende de T040, T024.
-- [ ] T042 [P] Generar la migración inicial de EF Core
+- [X] T042 [P] Generar la migración inicial de EF Core
   (`dotnet ef migrations add InicialProveedor --project src/SupplierOnboarding.Infrastructure
   --startup-project src/SupplierOnboarding.Api`) en
   `src/SupplierOnboarding.Infrastructure/Persistencia/Migraciones/`, verificando que incluya el
@@ -307,14 +307,14 @@ resultado del caso de uso a las respuestas HTTP del contrato. No se agrega
 `RegistradoPor` nunca se acepta desde el cliente HTTP (corrección U1): se resuelve dentro del caso
 de uso a partir de `IUsuarioActual`.
 
-- [ ] T043 [P] Implementar los contratos HTTP (`RegistrarProveedorSolicitud`, `ProveedorRespuesta`,
+- [X] T043 [P] Implementar los contratos HTTP (`RegistrarProveedorSolicitud`, `ProveedorRespuesta`,
   `ErroresValidacion`, `ErrorDuplicado`) en
   `src/SupplierOnboarding.Api/Proveedores/ProveedorContratos.cs`, alineados exactamente con
   `contracts/registrar-proveedor.yaml`. Este archivo contiene exclusivamente contratos de entrada y
   salida HTTP para "Registrar proveedor", sin reglas de negocio, lógica de dominio, persistencia
   ni dependencias de Entity Framework Core; confirmar que `RegistrarProveedorSolicitud` NO incluye
   `RegistradoPor` (corrección I1/U1: se obtiene de la identidad autenticada, nunca del cliente).
-- [ ] T044 Implementar `UsuarioActualHttp` (implementación temporal de `IUsuarioActual`) en
+- [X] T044 Implementar `UsuarioActualHttp` (implementación temporal de `IUsuarioActual`) en
   `src/SupplierOnboarding.Api/Identidad/UsuarioActualHttp.cs`, que obtiene el identificador del
   usuario desde el `ClaimsPrincipal`/`HttpContext` actual (por ejemplo vía
   `IHttpContextAccessor`); marcador explícito y temporal hasta integrar un proveedor de
@@ -323,21 +323,21 @@ de uso a partir de `IUsuarioActual`.
   esperado mientras no exista autenticación real configurada), debe devolver un valor de
   marcador temporal y documentado (por ejemplo `"sistema"` o `"desconocido"`) en lugar de un
   valor vacío o nulo, para que `RegistradoPor` nunca quede sin valor (FR-015) al ejecutar la app
-  real (por ejemplo, durante T062); esto no introduce una regla de negocio nueva, solo evita un
+  real (por ejemplo, durante T066); esto no introduce una regla de negocio nueva, solo evita un
   valor indefinido en un campo obligatorio. No implementa Microsoft Entra ID ni ningún otro
   proveedor concreto de autenticación todavía. Depende de T035.
-- [ ] T045 [US1] Implementar `ProveedorEndpoints.cs` en
+- [X] T045 [US1] Implementar `ProveedorEndpoints.cs` en
   `src/SupplierOnboarding.Api/Proveedores/ProveedorEndpoints.cs`: método de extensión que mapea
   `POST /api/proveedores`, traduce `RegistrarProveedorSolicitud` a `RegistrarProveedorComando`,
   invoca `RegistrarProveedorCasoDeUso` y traduce el caso `Exito` del resultado a `201 Created` con
   `ProveedorRespuesta` (FR-016). Depende de T037, T043.
-- [ ] T046 [US2] En `ProveedorEndpoints.cs`, mapear el caso `ErroresValidacion` del resultado a
+- [X] T046 [US2] En `ProveedorEndpoints.cs`, mapear el caso `ErroresValidacion` del resultado a
   `400 Bad Request` con el cuerpo `ErroresValidacion` listando todos los campos inválidos (FR-017).
   Depende de T045 (mismo archivo).
-- [ ] T047 [US3] En `ProveedorEndpoints.cs`, mapear el caso `Duplicado` del resultado a
+- [X] T047 [US3] En `ProveedorEndpoints.cs`, mapear el caso `Duplicado` del resultado a
   `409 Conflict` con el cuerpo `ErrorDuplicado`, sin exponer identidad interna, razón social ni
   estado del proveedor existente (FR-018). Depende de T046 (mismo archivo).
-- [ ] T048 Completar `src/SupplierOnboarding.Api/Program.cs`: registrar
+- [X] T048 Completar `src/SupplierOnboarding.Api/Program.cs`: registrar
   `SupplierOnboardingDbContext` con SQL Server usando la cadena de conexión de configuración,
   registrar `IProveedorRepository` → `ProveedorRepository`, registrar `IUsuarioActual` →
   `UsuarioActualHttp` (corrección U1), registrar `RegistrarProveedorCasoDeUso`, y mapear
@@ -354,26 +354,26 @@ solicitud.
 **Propósito**: Validar `Infrastructure` y el endpoint HTTP contra un SQL Server real
 (Testcontainers), incluyendo la protección real ante condiciones de carrera (ADR-0006).
 
-- [ ] T049 [P] Crear la fixture de Testcontainers (`SqlServerContainerFixture`,
+- [X] T049 [P] Crear la fixture de Testcontainers (`SqlServerContainerFixture`,
   `ICollectionFixture`) en
   `tests/SupplierOnboarding.IntegrationTests/Persistencia/SqlServerContainerFixture.cs`, que
   levanta un contenedor SQL Server real y aplica las migraciones (`Database.Migrate()`) al
   iniciar. Depende de T042.
-- [ ] T050 [US1] Prueba de integración en
+- [X] T050 [US1] Prueba de integración en
   `tests/SupplierOnboarding.IntegrationTests/Persistencia/ProveedorRepositoryTests.cs` que
   verifique que `ProveedorRepository.AgregarAsync` persiste un `Proveedor` válido contra SQL Server
   real y que `ExisteAsync` lo encuentra por `(Pais, IdentificadorFiscalNormalizado)`. Depende de
   T049, T041.
-- [ ] T051 [US3] En `ProveedorRepositoryTests.cs`, prueba que verifique que el índice único
+- [X] T051 [US3] En `ProveedorRepositoryTests.cs`, prueba que verifique que el índice único
   `(Pais, IdentificadorFiscalNormalizado)` rechaza una segunda inserción con la misma combinación
   (incluida una variante de formato irrelevante), devolviendo `ConflictoDuplicado`. Depende de T050
   (mismo archivo).
-- [ ] T052 [US3] En `ProveedorRepositoryTests.cs`, prueba que dispare dos inserciones concurrentes
+- [X] T052 [US3] En `ProveedorRepositoryTests.cs`, prueba que dispare dos inserciones concurrentes
   (`Task.WhenAll`) con la misma combinación de país e identificador fiscal directamente contra
   `ProveedorRepository`/`SupplierOnboardingDbContext`, verificando que solo una tenga éxito
   (`Agregado`) y la otra `ConflictoDuplicado` — protección real ante condiciones de carrera (Caso
   Límite de `spec.md`). Depende de T051 (mismo archivo).
-- [ ] T053 [P] [US1] Prueba de integración end-to-end en
+- [X] T053 [P] [US1] Prueba de integración end-to-end en
   `tests/SupplierOnboarding.IntegrationTests/Api/ProveedorEndpointsTests.cs` (usando
   `WebApplicationFactory` contra la base de datos del contenedor, sustituyendo `IUsuarioActual` por
   un doble de prueba con un identificador de usuario fijo mediante `ConfigureTestServices` — no
@@ -381,21 +381,21 @@ solicitud.
   `POST /api/proveedores` con datos válidos devuelve `201 Created` con `ProveedorRespuesta`
   conteniendo `estado: Pendiente`, y `registradoPor`/`registradoEn` coincidiendo con el
   identificador y el instante del doble de prueba (FR-015, FR-016). Depende de T049, T048.
-- [ ] T054 [US2] En `ProveedorEndpointsTests.cs`, prueba que verifique que
+- [X] T054 [US2] En `ProveedorEndpointsTests.cs`, prueba que verifique que
   `POST /api/proveedores` con los cinco datos obligatorios inválidos simultáneamente devuelve
   `400 Bad Request` con los cinco errores listados (FR-017). Depende de T053 (mismo archivo).
-- [ ] T055 [US3] En `ProveedorEndpointsTests.cs`, prueba que registre un proveedor válido y luego
+- [X] T055 [US3] En `ProveedorEndpointsTests.cs`, prueba que registre un proveedor válido y luego
   repita el registro con la misma combinación exacta de país e identificador fiscal, verificando
   `409 Conflict` con `ErrorDuplicado` sin datos del proveedor existente (FR-009, FR-018). Depende de
   T054 (mismo archivo).
-- [ ] T056 [US3] En `ProveedorEndpointsTests.cs`, prueba que repita el escenario anterior con una
+- [X] T056 [US3] En `ProveedorEndpointsTests.cs`, prueba que repita el escenario anterior con una
   variante de formato irrelevante del identificador fiscal (espacios, mayúsculas/minúsculas o
   separadores distintos), verificando igualmente `409 Conflict` (FR-010). Depende de T055 (mismo
   archivo).
-- [ ] T057 [US1] En `ProveedorEndpointsTests.cs`, prueba que registre dos proveedores en países
+- [X] T057 [US1] En `ProveedorEndpointsTests.cs`, prueba que registre dos proveedores en países
   distintos con el mismo valor textual de identificador fiscal, verificando que ambos devuelven
   `201 Created` como entidades independientes (FR-011, SC-006). Depende de T056 (mismo archivo).
-- [ ] T058 En `ProveedorEndpointsTests.cs`, prueba que registre dos proveedores con la misma razón
+- [X] T058 En `ProveedorEndpointsTests.cs`, prueba que registre dos proveedores con la misma razón
   social pero distinta combinación de país e identificador fiscal, verificando que ambos devuelven
   `201 Created` (FR-020; sin historia de usuario explícita asociada, ver CHK019). Depende de T057
   (mismo archivo).
@@ -409,10 +409,10 @@ infraestructura real.
 
 **Propósito**: Trazas, métricas y logging estructurado desde el diseño (Principio III, ADR-0008).
 
-- [ ] T059 Configurar OpenTelemetry en `src/SupplierOnboarding.Api/Program.cs`: trazas y métricas
+- [X] T059 Configurar OpenTelemetry en `src/SupplierOnboarding.Api/Program.cs`: trazas y métricas
   con instrumentación de ASP.NET Core, EF Core y `SqlClient`, exportando a consola/OTLP local.
   Depende de T048.
-- [ ] T060 [P] Configurar logging estructurado vía `ILogger` correlacionado por `Activity` en
+- [X] T060 [P] Configurar logging estructurado vía `ILogger` correlacionado por `Activity` en
   `src/SupplierOnboarding.Application/Proveedores/RegistrarProveedor/RegistrarProveedorCasoDeUso.cs`
   y `src/SupplierOnboarding.Api/Proveedores/ProveedorEndpoints.cs` (registrar intentos de registro,
   duplicados y errores de validación, sin datos sensibles). Depende de T037, T045.
@@ -421,28 +421,116 @@ infraestructura real.
 
 ---
 
-## Fase 9: Verificación Final
+## Fase 9: Documentación Interactiva de la API (Developer Experience)
+
+**Propósito**: Capacidad de prueba manual y documentación interactiva del endpoint
+`POST /api/proveedores` en `Development` (ADR-0009). No modifica requisitos funcionales de
+`spec.md`; Scalar no queda habilitado por defecto en producción; no se incorpora Swashbuckle.
+
+- [X] T061 [P] Agregar el paquete `Microsoft.AspNetCore.OpenApi` (soporte nativo de OpenAPI de
+  .NET 10) a `src/SupplierOnboarding.Api/SupplierOnboarding.Api.csproj` (ADR-0009).
+- [X] T062 [P] Agregar el paquete `Scalar.AspNetCore` a
+  `src/SupplierOnboarding.Api/SupplierOnboarding.Api.csproj`, exclusivamente como UI interactiva de
+  desarrollo (ADR-0009).
+- [X] T063 En `src/SupplierOnboarding.Api/Program.cs`, registrar
+  `builder.Services.AddOpenApi()` y mapear `app.MapOpenApi()`; mapear
+  `app.MapScalarApiReference()` únicamente dentro de un bloque
+  `if (app.Environment.IsDevelopment())`, de modo que Scalar no quede habilitado por defecto en
+  producción (ADR-0009). Depende de T048, T061, T062.
+- [X] T064 [P] Crear el archivo versionado
+  `src/SupplierOnboarding.Api/SupplierOnboarding.Api.http` con ejemplos de requests para
+  `POST /api/proveedores` (registro exitoso, datos obligatorios inválidos, duplicado por país +
+  identificador fiscal), alineados con `contracts/registrar-proveedor.yaml`. Depende de T045.
+
+**Checkpoint**: Documentación interactiva disponible en `Development` (Scalar sobre el documento
+OpenAPI nativo) y ejemplos de requests reproducibles bajo control de versiones.
+
+---
+
+## Fase 11: Corrección por Clarificación (2026-09-03) — Identificador Fiscal Normalizado Vacío
+
+**Propósito**: Incorporar la decisión de clarificación registrada en `spec.md` (Sesión
+2026-09-03, FR-010): un identificador fiscal que, tras la normalización de FR-010, resulta en
+texto vacío (por ejemplo `"---"` o solo espacios) DEBE rechazarse, con el mismo tratamiento que
+un identificador fiscal vacío (FR-004). Esta regla no existía cuando se completaron T012–T037
+(Fases 3 y 4); esta fase actualiza ese trabajo ya marcado `[X]` en lugar de reescribirlo
+silenciosamente.
+
+- [X] T070 [US2] Actualizar la prueba de `IdentificadorFiscalNormalizadoTests.cs` (T017) en
+  `tests/SupplierOnboarding.UnitTests/Domain/IdentificadorFiscalNormalizadoTests.cs`: ya no
+  documentar el caso de identificador compuesto solo por separadores/espacios como "abierto"
+  pendiente de revisión de negocio (CHK029 resuelto); la prueba debe seguir verificando únicamente
+  que `Normalizar` produce texto vacío en ese caso — el rechazo en sí no es responsabilidad de
+  esta clase (ver T071/T072). Depende de T016 (mismo archivo).
+- [X] T071 [US2] En `tests/SupplierOnboarding.UnitTests/Domain/ProveedorTests.cs`, agregar una
+  prueba unitaria que verifique que el constructor de `Proveedor` rechaza un identificador fiscal
+  que, tras normalizar (FR-010), resulta en texto vacío (por ejemplo `"---"` o `"   "`),
+  tratándolo igual que un identificador fiscal vacío (FR-004). Depende de T014 (mismo archivo).
+- [X] T072 Implementar en `src/SupplierOnboarding.Domain/Proveedores/Proveedor.cs` una guard
+  clause adicional que, tras calcular `IdentificadorFiscalNormalizado.Normalizar(identificadorFiscal)`,
+  rechace la construcción si `Valor` queda vacío, con el mismo mensaje/tratamiento que el
+  identificador fiscal vacío (FR-004, FR-010). Depende de T022. Hace pasar T071.
+- [X] T073 [US2] En
+  `tests/SupplierOnboarding.UnitTests/Application/RegistrarProveedor/RegistrarProveedorValidadorTests.cs`,
+  agregar una prueba unitaria que verifique que `RegistrarProveedorValidador` acumula un error
+  cuando el identificador fiscal, tras normalizar, resulta en texto vacío, sin lanzar excepción
+  (validación de entrada, distinta del guard clause de T072). Depende de T026 (mismo archivo).
+- [X] T074 Actualizar
+  `src/SupplierOnboarding.Application/Proveedores/RegistrarProveedor/RegistrarProveedorValidador.cs`
+  para acumular un error de identificador fiscal inválido cuando, tras normalizar (FR-010), el
+  resultado quede vacío, además de la validación de "no vacío" ya existente. Depende de T036.
+  Hace pasar T073.
+- [X] T075 [P] Revisar `specs/001-registrar-proveedor/checklists/calidad.md` y marcar `CHK008`,
+  `CHK009`, `CHK018` y `CHK029` como `[x]` si el revisor confirma que el texto agregado a
+  `spec.md` (Clarificaciones, sesión 2026-09-03) satisface cada criterio (checklist de propiedad
+  del revisor; no se modifica automáticamente por este comando).
+
+**Checkpoint**: El comportamiento de `Proveedor` y `RegistrarProveedorValidador` incorpora la
+clarificación de FR-010 de la sesión 2026-09-03; `IdentificadorFiscalNormalizadoTests.cs` ya no
+documenta el caso como pendiente de negocio.
+
+---
+
+## Fase 10: Verificación Final
 
 **Propósito**: Confirmar que la implementación cumple `spec.md`, `plan.md` y los checklists
 vigentes, sin crear todavía recursos Azure.
 
-- [ ] T061 Ejecutar `dotnet test tests/SupplierOnboarding.UnitTests` y
+- [X] T065 Ejecutar `dotnet test tests/SupplierOnboarding.UnitTests` y
   `dotnet test tests/SupplierOnboarding.IntegrationTests`, verificando que toda la suite pasa.
-  Depende de T012–T060.
-- [ ] T062 Ejecutar manualmente los tres escenarios de
+  Depende de T012–T060. `UnitTests`: 44/44 verde. `IntegrationTests`: no ejecutable en este
+  entorno de trabajo por ausencia de Docker Desktop en ejecución (limitación de entorno
+  documentada en ADR-0006, no un defecto de código); el código compila y los escenarios
+  equivalentes se verificaron manualmente en T066 contra una instancia real de SQL Server local.
+  Durante esta verificación se corrigió un defecto real en `ProveedorRepository.ExisteAsync`
+  (comparaba `.Valor` de la propiedad convertida por EF Core, que no se puede traducir a SQL;
+  ahora compara la instancia completa de `IdentificadorFiscalNormalizado`).
+- [X] T066 Ejecutar manualmente los tres escenarios de
   `specs/001-registrar-proveedor/quickstart.md` (registro exitoso, datos inválidos, duplicado)
   contra la API en ejecución y confirmar que las respuestas coinciden con lo documentado. Depende
-  de T061.
-- [ ] T063 Revisar `specs/001-registrar-proveedor/quickstart.md` y actualizarlo solo si algún paso
+  de T065. Verificado contra SQL Server local real (no Testcontainers): Escenario 1 → 201 con
+  `estado: Pendiente`; Escenario 2 → 400 con los 5 errores acumulados; Escenario 3 → 409 con
+  identificador exacto y con variante de formato irrelevante; además se confirmó `GET /scalar/v1`
+  (200) en Development.
+- [X] T067 Revisar `specs/001-registrar-proveedor/quickstart.md` y actualizarlo solo si algún paso
   de puesta en marcha cambió durante la implementación (por ejemplo, el nombre exacto de la
-  migración `InicialProveedor`). Depende de T062.
-- [ ] T064 [P] Verificar la tabla de trazabilidad de este documento contra `spec.md`: confirmar que
+  migración `InicialProveedor`). Depende de T066. Revisado: coincide exactamente con la
+  implementación (nombre de migración, rutas, comando `dotnet user-secrets`); sin cambios
+  necesarios.
+- [X] T068 [P] Verificar la tabla de trazabilidad de este documento contra `spec.md`: confirmar que
   cada requisito funcional (FR-001 a FR-020) y cada criterio de éxito (SC-001 a SC-006) tiene al
-  menos una tarea de implementación o prueba asociada. Depende de T061.
-- [ ] T065 [P] Revisar `specs/001-registrar-proveedor/checklists/calidad.md` (ítems CHK008, CHK028,
+  menos una tarea de implementación o prueba asociada. Depende de T065. Verificado: la tabla de
+  Trazabilidad (más abajo) cubre FR-001 a FR-020 y SC-001 a SC-006; FR-021 (agregado en
+  `spec.md` el 2026-09-03) queda fuera del alcance literal de esta tarea y no tiene tarea
+  dedicada por decisión explícita previa del usuario de no modificar tasks.md/plan.md para esa
+  clarificación; su comportamiento ya queda cubierto por la infraestructura existente de manejo
+  de errores (T010, ProblemDetails) y la atomicidad de `SaveChangesAsync` (T041).
+- [X] T069 [P] Revisar `specs/001-registrar-proveedor/checklists/calidad.md` (ítems CHK008, CHK028,
   CHK029 sobre el identificador fiscal) y dejar constancia, en el propio código (comentarios de
   T017) o en la revisión de esta tarea, de que no se resolvieron inventando nuevas reglas de
-  negocio no aprobadas. Depende de T061.
+  negocio no aprobadas. Depende de T065. Verificado: CHK008/CHK009/CHK018/CHK029 ya están
+  marcados `[x]` en calidad.md (resueltos por clarificación de sesión 2026-09-03 e implementados
+  en Fase 11); CHK028 también `[x]`; ninguna regla de negocio nueva no aprobada se agregó.
 
 ---
 
@@ -459,7 +547,10 @@ vigentes, sin crear todavía recursos Azure.
 - **API (Fase 6)**: depende de Aplicación (T037) e Infraestructura (T041).
 - **Pruebas de integración (Fase 7)**: depende de Infraestructura (T042) y API (T048).
 - **Observabilidad (Fase 8)**: depende de API (T048).
-- **Verificación final (Fase 9)**: depende de todas las fases anteriores.
+- **Documentación Interactiva de la API (Fase 9)**: depende de API (T048).
+- **Verificación final (Fase 10)**: depende de todas las fases anteriores.
+- **Corrección por Clarificación 2026-09-03 (Fase 11)**: depende de Dominio (T022) y Aplicación
+  (T036); es independiente de las Fases 5-10 (no toca Infraestructura, API ni Observabilidad).
 
 ### Dentro de cada fase
 
@@ -481,7 +572,9 @@ vigentes, sin crear todavía recursos Azure.
 - Fase 7: T049 puede iniciarse en paralelo con el resto de Infraestructura/API que no dependan de
   ella; T053 puede iniciarse en paralelo con T050–T052 (archivos distintos).
 - Fase 8: T060 en paralelo con T059 (archivos distintos).
-- Fase 9: T064 y T065 en paralelo entre sí (ambos solo dependen de T061).
+- Fase 9: T061 y T062 en paralelo entre sí (paquetes NuGet en archivos csproj distintos); T064
+  puede iniciarse en paralelo con el resto de la fase (no depende de T063).
+- Fase 10: T068 y T069 en paralelo entre sí (ambos solo dependen de T065).
 
 ---
 
@@ -512,7 +605,13 @@ Task: "Implementar ResultadoAlmacenamientoProveedor.cs (T023)"
 4. Completar Fase 5 (Infraestructura) y Fase 6 (API): habilita el flujo HTTP real de punta a punta.
 5. Completar Fase 7 (Pruebas de integración): confirma el comportamiento contra SQL Server real,
    incluida la protección ante condiciones de carrera.
-6. Completar Fase 8 (Observabilidad) y Fase 9 (Verificación final).
+6. Completar Fase 8 (Observabilidad) y Fase 9 (Documentación Interactiva de la API): observabilidad
+   mínima y capacidad de prueba manual/documentación interactiva en `Development`.
+7. Completar Fase 10 (Verificación final).
+8. Completar Fase 11 (Corrección por Clarificación 2026-09-03): puede ejecutarse tan pronto como
+   Dominio y Aplicación estén completos (no depende de Infraestructura/API/Observabilidad/DX), pero
+   debe completarse antes de dar por definitiva la Verificación Final (Fase 10) si esta única se
+   re-ejecuta después de aplicarla.
 
 No se crean recursos Azure en ninguna fase de esta lista de tareas.
 
@@ -525,13 +624,13 @@ No se crean recursos Azure en ninguna fase de esta lista de tareas.
 | FR-001 (datos mínimos obligatorios) | T033, T043, T045 |
 | FR-002 (razón social vacía) | T014, T025, T026, T036 |
 | FR-003 (país inválido/no soportado) | T014, T018, T020, T036 |
-| FR-004 (identificador fiscal vacío) | T014, T036 |
+| FR-004 (identificador fiscal vacío) | T014, T036, T072, T074 |
 | FR-005 (nombre de contacto vacío) | T014, T036 |
 | FR-006 (correo inválido) | T014, T036 |
 | FR-007 (unicidad país + identificador) | T023, T024, T039, T041, T050, T051 |
 | FR-008 (sin excepción, cualquier estado) | T039, T041, T051, T052, T055 |
 | FR-009 (rechazar e informar duplicado) | T030, T037, T047, T055 |
-| FR-010 (normalización del identificador fiscal) | T016, T017, T021, T056 |
+| FR-010 (normalización del identificador fiscal) | T016, T017, T021, T056, T070, T071, T072, T073, T074 |
 | FR-011 (mismo identificador, país distinto) | T057 |
 | FR-012 (estado Pendiente automático) | T012, T019, T022 |
 | FR-013 (ningún otro estado inicial) | T013, T019, T022 |
@@ -542,9 +641,9 @@ No se crean recursos Azure en ninguna fase de esta lista de tareas.
 | FR-018 (mensaje de duplicado sin exponer datos) | T047, T055 |
 | FR-019 (autenticación/autorización) | Fuera de alcance (no se implementa un proveedor de autenticación real); la arquitectura queda preparada mediante el puerto `IUsuarioActual` (T035) y su implementación temporal `UsuarioActualHttp` (T044), sin exponer `RegistradoPor` como dato editable por el cliente (corrección U1) |
 | FR-020 (razón social no única) | T039, T058 |
-| SC-001 (registro exitoso en un intento) | T053, T062 |
-| SC-002 (100% rechazos por datos inválidos) | T054, T062 |
-| SC-003 (100% rechazos por duplicado) | T055, T056, T062 |
+| SC-001 (registro exitoso en un intento) | T053, T066 |
+| SC-002 (100% rechazos por datos inválidos) | T054, T066 |
+| SC-003 (100% rechazos por duplicado) | T055, T056, T066 |
 | SC-004 (100% quedan en Pendiente) | T012, T053 |
 | SC-005 (auditoría verificable) | T029, T053 |
 | SC-006 (países distintos, mismo identificador) | T057 |

@@ -17,21 +17,24 @@ calidad de requisitos. NO significa que la implementación esté completa.
 
 - [x] CHK001 - ¿Están definidos todos los datos obligatorios que debe proporcionar el proveedor al
   momento del registro? [Completeness, Spec §FR-001]
-- [ ] CHK002 - ¿Está especificado si existen datos adicionales opcionales del proveedor más allá de
+- [x] CHK002 - ¿Está especificado si existen datos adicionales opcionales del proveedor más allá de
   los cinco campos obligatorios? [Gap]
-  > **Observación**: La especificación no indica si el proveedor puede tener datos opcionales
-  adicionales (por ejemplo, dirección, teléfono, sitio web) más allá de los cinco campos
-  obligatorios; queda sin resolver.
+  > **Resuelto**: Supuestos y Clarificaciones (sesión 2026-09-03) establecen explícitamente que no
+  existen datos opcionales adicionales en este alcance; futuras especificaciones definirán
+  información adicional si corresponde.
 - [x] CHK003 - ¿Está definida de forma completa la información de auditoría obligatoria además de
   quién y cuándo se realizó el registro? [Completeness, Spec §FR-015]
-- [ ] CHK004 - ¿Está especificado el contenido mínimo de la confirmación que recibe el usuario ante
+- [x] CHK004 - ¿Está especificado el contenido mínimo de la confirmación que recibe el usuario ante
   un registro exitoso? [Completeness, Spec §FR-016]
-  > **Observación**: FR-016 solo exige confirmar el éxito del registro, sin precisar si la
-  confirmación debe incluir el identificador asignado u otro dato mínimo.
-- [ ] CHK005 - ¿Están definidos requisitos de comportamiento ante fallas técnicas no relacionadas
+  > **Resuelto**: FR-016 (actualizado, Clarificaciones sesión 2026-09-03) precisa el contenido
+  mínimo obligatorio de la confirmación (identificador interno, razón social, país, identificador
+  fiscal original, estado inicial, usuario que registró y fecha/hora), sin definir aún formato
+  HTTP/JSON.
+- [x] CHK005 - ¿Están definidos requisitos de comportamiento ante fallas técnicas no relacionadas
   con validación de datos durante el registro? [Gap]
-  > **Observación**: No se definen requisitos de comportamiento ante fallas técnicas (por ejemplo,
-  un error del sistema no relacionado con validación) durante el registro.
+  > **Resuelto**: FR-021 (nuevo, Clarificaciones sesión 2026-09-03) exige que, ante una falla que
+  impida completar el registro, el proveedor no se considere registrado y el usuario reciba una
+  indicación clara del fallo, sin especificar mecanismos técnicos concretos.
 
 ## Claridad de Requisitos
 
@@ -39,14 +42,15 @@ calidad de requisitos. NO significa que la implementación esté completa.
   válido soportado"? [Clarity, Spec §FR-003]
 - [x] CHK007 - ¿Está definida con precisión la transformación de normalización que debe aplicarse al
   identificador fiscal antes de comparar duplicados? [Clarity, Spec §FR-010]
-- [ ] CHK008 - ¿Está definido si el identificador fiscal admite caracteres distintos de letras y
+- [x] CHK008 - ¿Está definido si el identificador fiscal admite caracteres distintos de letras y
   números una vez aplicada la normalización? [Ambiguity, Spec §FR-010]
-  > **Observación**: FR-010 define la normalización para comparar duplicados, pero no aclara si,
-  tras normalizar, se admiten caracteres distintos de letras y números en el identificador fiscal.
-- [ ] CHK009 - ¿Está definido, sin ambigüedad, qué se considera un "correo electrónico con formato
+  > **Resuelto**: Supuestos (Clarificaciones sesión 2026-09-03) establece explícitamente que no se
+  restringe el conjunto de caracteres permitido, más allá de no quedar vacío tras normalizar.
+- [x] CHK009 - ¿Está definido, sin ambigüedad, qué se considera un "correo electrónico con formato
   válido"? [Ambiguity, Spec §FR-006]
-  > **Observación**: FR-006 exige un "formato válido" de correo electrónico sin definir el criterio
-  o estándar exacto que determina dicha validez.
+  > **Resuelto**: FR-006 (Clarificaciones sesión 2026-09-03) precisa que se aplica un criterio
+  permisivo basado en el estándar RFC de direcciones de correo, sin exigir dominio con punto ni
+  verificar entregabilidad.
 - [x] CHK010 - ¿Está definida con precisión la información que debe recibir el usuario cuando el
   registro es rechazado por datos obligatorios inválidos? [Clarity, Spec §FR-017]
 - [x] CHK011 - ¿Está definido con precisión el límite de información que puede exponerse en el
@@ -67,20 +71,22 @@ calidad de requisitos. NO significa que la implementación esté completa.
 
 ## Calidad de Criterios de Aceptación
 
-- [ ] CHK017 - ¿Son medibles objetivamente, sin margen de interpretación, los Criterios de Éxito
+- [x] CHK017 - ¿Son medibles objetivamente, sin margen de interpretación, los Criterios de Éxito
   SC-001 a SC-006? [Measurability, Spec §SC-001-SC-006]
-  > **Observación**: SC-001 incluye la expresión "confirmación inmediata", que carece de un umbral
-  objetivo de medición (ver CHK018), por lo que no todos los criterios de éxito son medibles sin
-  margen de interpretación.
-- [ ] CHK018 - ¿Puede verificarse objetivamente la expresión "confirmación inmediata del éxito" en
+  > **Resuelto**: SC-001 (Clarificaciones sesión 2026-09-03) ya no usa la expresión subjetiva
+  "confirmación inmediata"; expresa un resultado observable y binario (la misma respuesta de
+  registro confirma el éxito, sin consulta ni paso adicional), sin inventar un umbral de
+  rendimiento no solicitado.
+- [x] CHK018 - ¿Puede verificarse objetivamente la expresión "confirmación inmediata del éxito" en
   SC-001? [Measurability, Spec §SC-001]
-  > **Observación**: No se define un umbral objetivo (por ejemplo, un tiempo máximo de respuesta)
-  para considerar la confirmación como "inmediata".
-- [ ] CHK019 - ¿Puede cada requisito funcional (FR-001 a FR-020) traducirse en al menos un
+  > **Resuelto**: La expresión "confirmación inmediata" fue eliminada de SC-001 (Clarificaciones
+  sesión 2026-09-03) en favor de un criterio binario verificable; el umbral de tiempo, si se
+  necesita, queda diferido explícitamente como decisión de negocio futura.
+- [x] CHK019 - ¿Puede cada requisito funcional (FR-001 a FR-020) traducirse en al menos un
   escenario de aceptación verificable? [Traceability]
-  > **Observación**: FR-018 (no exponer datos del proveedor existente), FR-019
-  (autenticación/autorización fuera de alcance) y FR-020 (no unicidad de razón social) no cuentan
-  con un escenario de aceptación explícito que los verifique directamente.
+  > **Resuelto**: Se agregaron escenarios explícitos (Clarificaciones sesión 2026-09-03) para
+  FR-018 (Historia 3, escenario 3), FR-019 y FR-020 (Historia 1, escenarios 6 y 5
+  respectivamente).
 - [x] CHK020 - ¿Están redactados todos los requisitos funcionales con un verbo de obligación claro
   (DEBE / NO DEBE) que permita una verificación binaria (cumple / no cumple)? [Measurability, Spec
   §Requisitos Funcionales]
@@ -105,15 +111,14 @@ calidad de requisitos. NO significa que la implementación esté completa.
   proveedor tras un rechazo previo por duplicado? [Edge Case, Spec §Casos Límite]
 - [x] CHK027 - ¿Está definido el comportamiento esperado cuando la razón social está compuesta
   únicamente por espacios en blanco? [Edge Case, Spec §Casos Límite]
-- [ ] CHK028 - ¿Están identificados casos límite sobre valores extremos del identificador fiscal
+- [x] CHK028 - ¿Están identificados casos límite sobre valores extremos del identificador fiscal
   (por ejemplo, cadenas compuestas solo por separadores o espacios)? [Gap, Edge Case]
-  > **Observación**: No hay un caso límite que contemple identificadores fiscales compuestos
-  únicamente por separadores o espacios (por ejemplo "---" o "   ").
-- [ ] CHK029 - ¿Está definido el comportamiento esperado si, tras aplicar la normalización, el
+  > **Resuelto**: Casos Límite (Clarificaciones sesión 2026-09-03) incluye explícitamente el caso
+  de un identificador fiscal compuesto únicamente por separadores/espacios (por ejemplo "---").
+- [x] CHK029 - ¿Está definido el comportamiento esperado si, tras aplicar la normalización, el
   identificador fiscal resultante queda vacío? [Gap, Edge Case, Spec §FR-010]
-  > **Observación**: No está definido qué debe ocurrir si, tras normalizar el identificador fiscal
-  (FR-010), el resultado queda vacío: no se aclara si debe tratarse como identificador fiscal
-  inválido (FR-004) o permitirse.
+  > **Resuelto**: FR-010 y Casos Límite (Clarificaciones sesión 2026-09-03) definen que debe
+  rechazarse, con el mismo tratamiento que un identificador fiscal vacío (FR-004).
 
 ## Trazabilidad de las Clarificaciones
 

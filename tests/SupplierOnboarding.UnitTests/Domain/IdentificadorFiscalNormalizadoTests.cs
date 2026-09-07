@@ -37,11 +37,9 @@ public class IdentificadorFiscalNormalizadoTests
     [InlineData("-.-/")]
     public void Normalizar_ConIdentificadorCompuestoSoloPorSeparadoresOEspacios_ProduceTextoVacio(string identificadorFiscal)
     {
-        // CHK029 (checklist de calidad, caso límite abierto): si tras normalizar el resultado
-        // queda vacío, no se inventa aquí una nueva regla de rechazo no solicitada; se documenta
-        // el comportamiento actual para que sea revisado explícitamente por el negocio antes de
-        // producción (ver data-model.md). FR-004 solo exige que el valor ORIGINAL no esté vacío;
-        // este value object no valida eso, es responsabilidad del constructor de Proveedor.
+        // CHK029 (resuelto, sesión 2026-09-03): esta clase solo calcula la normalización; el
+        // rechazo del caso vacío es responsabilidad del constructor de Proveedor (T072) y de
+        // RegistrarProveedorValidador (T074), no de este value object.
         var normalizado = IdentificadorFiscalNormalizado.Normalizar(identificadorFiscal);
 
         Assert.Equal(string.Empty, normalizado.Valor);
